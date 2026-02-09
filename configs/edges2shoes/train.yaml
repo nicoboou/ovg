@@ -1,0 +1,135 @@
+defaults:
+  - transforms: transforms
+  - _self_
+
+seed: 42
+output_dir: outputs
+
+data:
+  dataset: edges2shoes
+  num_classes: 2
+  csv_path: CSV_PATH
+  root_dir: ROOT_DIR
+  num_workers: 16
+  hr_size: 256
+  augmentation: true
+  paired_mode: false
+  mode: translation
+  class_indices: null
+  normalize: true
+  split: null
+
+
+model:
+  pretrained: true
+  space: latent
+  vae_path: runwayml/stable-diffusion-v1-5
+  unet_path: runwayml/stable-diffusion-v1-5
+  noise_scheduler_path: runwayml/stable-diffusion-v1-5
+  conditioning_mode: "cross_attention"
+  rescale_betas_zero_snr: false
+  use_lora: false
+  lora_rank: 4
+
+  params:
+    _target_: diffusers.UNet2DConditionModel
+    in_channels: 4
+    out_channels: 4
+    block_out_channels: [320, 640, 1280, 1280]
+    layers_per_block: 2
+    norm_num_groups: 32
+    cross_attention_dim: 768
+    down_block_types:
+      - CrossAttnDownBlock2D
+      - CrossAttnDownBlock2D
+      - CrossAttnDownBlock2D
+      - DownBlock2D
+    up_block_types:
+      - UpBlock2D
+      - CrossAttnUpBlock2D
+      - CrossAttnUpBlock2D
+      - CrossAttnUpBlock2D
+    attention_head_dim: 8
+    norm_eps: 1.0e-05
+    act_fn: silu
+    downsample_padding: 1
+    mid_block_scale_factor: 1
+    flip_sin_to_cos: true
+    freq_shift: 0
+    center_input_sample: false
+
+    
+
+noise_scheduler:
+  _target_: diffusers.DDIMScheduler
+  prediction_type: "epsilon"
+  num_train_timesteps: 1000
+  beta_schedule: "scaled_linear"
+  beta_start: 0.00085
+  beta_end: 0.012
+  clip_sample: false
+  dynamic_thresholding_ratio: 0.995
+  sample_max_value: 1
+  timestep_spacing: "leading"
+  set_alpha_to_one: false
+  steps_offset: 1
+
+
+training:
+  batch_size: 32
+  num_epochs: 100
+  loss_type: l2
+  max_num_steps: 80000
+  gradient_accumulation_steps: 2
+  max_grad_norm: 1.0
+  noise_offset: 0.0
+  p_uncond: 0.1
+  training_mode: diffusion
+  guidance_scale: 7.5
+  gradient_checkpointing: false
+  resume_from_checkpoint: null
+  num_inference_steps: 50
+  use_ema: true
+  ema_decay: 0.995
+  ema_min_decay: 0.0
+  ema_update_after: 100
+  loss_scale_factor: 1.0
+  check_nan_grads: true
+
+optimizer:
+  learning_rate: 5e-5
+  cond_lr_mult: 1.0
+  lr_scheduler: cosine
+  num_cycles: 1
+  lr_warmup_steps: 2000
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_weight_decay: 0.0
+  adam_epsilon: 1e-08
+  cond_param_regex:
+    - class_embed
+    - class_embedding
+    - label_emb
+    - y_embed
+
+evaluation:
+  val_interval: 1
+  num_samples_to_eval: 200
+
+metrics:
+  enabled: true
+  n_bins: 20
+  max_batches: 10
+  compute_x0_mse: true
+  compute_class_flip: true
+  compute_cond_influence: true
+
+logging:
+  report_to: wandb
+  project_name: ovg
+  run_name: null
+  checkpointing_steps: 2000
+  checkpoints_total_limit: null
+  
+distributed:
+  local_rank: -1

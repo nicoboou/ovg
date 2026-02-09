@@ -1,0 +1,30 @@
+train:
+  _target_: torchvision.transforms.Compose
+  transforms:
+  - _target_: torchvision.transforms.RandomHorizontalFlip
+    p: 0.5
+  - _target_: torchvision.transforms.RandomVerticalFlip
+    p: 0.5
+  - _target_: torchvision.transforms.ToTensor
+  - _target_: torchvision.transforms.Normalize
+    mean:
+    - 0.5
+    - 0.5
+    - 0.5
+    std:
+    - 0.5
+    - 0.5
+    - 0.5
+validation:
+  _target_: torchvision.transforms.Compose
+  transforms:
+  - _target_: torchvision.transforms.ToTensor
+  - _target_: torchvision.transforms.Normalize
+    mean:
+    - 0.5
+    - 0.5
+    - 0.5
+    std:
+    - 0.5
+    - 0.5
+    - 0.5

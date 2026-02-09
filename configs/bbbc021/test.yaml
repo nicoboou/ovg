@@ -1,0 +1,84 @@
+defaults:
+  - _self_
+  - transforms: transforms
+
+seed: 42
+output_dir: "outputs/${now:%Y-%m-%d}"
+
+data:
+  dataset: "bbbc021"
+  num_classes: 2
+  csv_path: CSV_PATH
+  hr_size: 256
+  scale_factor: 16
+  paired_mode: true
+  deterministic_downsample: true
+  added_noise_post_upsampling: 0.0
+  mode: "super_resolution"
+  class_indices: null
+  blur_kernel_size: 1  # must be odd (1 means no blur)
+  blur_sigma: 0.0  # Gaussian blur std (0.0 means no blur)
+  noise_std: 0.0  # std Noising
+  interpolation_mode: "nearest"  # ['nearest', 'bilinear', 'bicubic']
+  use_blur: false
+  use_downsample: true
+
+model_checkpoint:
+  checkpoint_path: CHECKPOINT_PATH.pt
+  use_ema: true
+  use_lora: false
+
+inference:
+  num_inference_steps: 50
+  guidance_scale: 1.0
+  eta: 0.0
+  inversion_schedule_name: "scaled_linear"
+
+benchmark:
+  num_samples: 32
+  vis_samples: 10
+  batch_size: 32
+
+  export_intermediates: true
+  export_output_dir: "results/benchmark_export/${now:%Y-%m-%d_%H-%M-%S}"
+  export_save_intermediate_latents: true
+  export_save_predicted_noises: true
+
+  methods:
+    - name: "standard_inversion"
+      enabled: true
+
+    - name: "ours"
+      enabled: true
+      params:
+        use_cgd: true
+        cgd_eta: 1000.0
+        use_scp: true
+        scp_eta: 0.0001
+        clip_frac: 1.0
+
+    - name: "ours"
+      enabled: true
+      params:
+        use_cgd: true
+        cgd_eta: 1000.0
+        use_scp: true
+        scp_eta: 0.0001
+        clip_frac: 1.0
+        forward_fraction: 0.04
+        
+
+metrics:
+  enabled: true
+  run_offline_in_benchmark: false
+  live_binned: true
+  n_bins: 50
+  max_batches: 100
+  compute_x0_mse: true
+  compute_class_flip: true
+  compute_cond_influence: true
+
+logging:
+  report_to: wandb
+  project_name: invertx
+  run_name: null
